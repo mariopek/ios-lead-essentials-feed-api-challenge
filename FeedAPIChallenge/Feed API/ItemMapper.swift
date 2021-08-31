@@ -31,10 +31,14 @@ final class ItemMapper {
 		}
 	}
 
-	static func map(_ data: Data, _ response: HTTPURLResponse) throws -> [FeedImage] {
-		guard response.statusCode == 200 else {
-			throw RemoteFeedLoader.Error.invalidData
+	private static var OK_200 = 200
+
+	static func map(_ data: Data, _ response: HTTPURLResponse) -> FeedLoader.Result {
+		guard response.statusCode == OK_200,
+		      let root = try? JSONDecoder().decode(Root.self, from: data) else {
+			return .failure(RemoteFeedLoader.Error.invalidData)
 		}
-		return try JSONDecoder().decode(Root.self, from: data).items.map { $0.image }
+		let items = root.items.map { $0.image }
+		return .success(items)
 	}
 }
